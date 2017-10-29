@@ -1,10 +1,19 @@
 {
-  "name": "awesome-typed-sass-module",
+  "name": "awesome-typed-sass-modules",
   "version": "1.0.0",
   "description": "typed css module that works with sass",
-  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Feiyang1/awesome-typed-sass-modules"
+  },
+  "main": "",
   "scripts": {
-    "build": "gulp compile"
+    "build": "gulp compile",
+    "watch": "gulp watch",
+    "prepublish": "npm run build"
+  },
+  "bin": {
+    "atsm": "lib/cli.js"
   },
   "author": "Feiyang Chen",
   "license": "ISC",
