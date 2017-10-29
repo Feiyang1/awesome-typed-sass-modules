@@ -1,0 +1,22 @@
+{
+  "name": "awesome-typed-sass-module",
+  "version": "1.0.0",
+  "description": "typed css module that works with sass",
+  "main": "index.js",
+  "scripts": {
+    "build": "gulp compile"
+  },
+  "author": "Feiyang Chen",
+  "license": "ISC",
+  "dependencies": {
+    "node-sass": "^4.5.3",
+    "typed-css-modules": "^0.3.0"
+  },
+  "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1",
+    "gulp": "^3.9.1",
+    "gulp-babel": "^7.0.0",
+    "gulp-plumber": "^1.1.0"
+  }
+}

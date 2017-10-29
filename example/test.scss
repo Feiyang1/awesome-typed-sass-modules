@@ -1,0 +1,6 @@
+@import "./global.scss";
+
+.local {
+    @extend .global;
+    display: block;
+}
