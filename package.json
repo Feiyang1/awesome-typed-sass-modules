@@ -1,6 +1,6 @@
 {
   "name": "awesome-typed-sass-modules",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "typed css module that works with sass",
   "repository": {
     "type": "git",
@@ -18,8 +18,8 @@
   "author": "Feiyang Chen",
   "license": "ISC",
   "dependencies": {
-    "node-sass": "^4.5.3",
-    "typed-css-modules": "^0.3.0"
+    "node-sass": "4.5.3",
+    "typed-css-modules": "0.3.0"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",
