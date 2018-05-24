@@ -18,7 +18,7 @@
   "author": "Feiyang Chen",
   "license": "ISC",
   "dependencies": {
-    "node-sass": "4.5.3",
+    "node-sass": "4.9.0",
     "typed-css-modules": "0.3.0"
   },
   "devDependencies": {
