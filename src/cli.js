@@ -1,20 +1,20 @@
 #!/usr/bin/env node
 
-import path from 'path';
+import DtsCreator from 'typed-css-modules';
+import chalk from 'chalk';
 import chokidar from 'chokidar';
 import fs from 'fs';
 import glob from 'glob';
-import yargs from 'yargs';
-import chalk from 'chalk';
-import DtsCreator from 'typed-css-modules';
+import path from 'path';
 import sass from 'node-sass';
+import yargs from 'yargs';
 
 const pkg = require('../package.json');
 
-const readSass = (file, relativeTo) => (
+const readSass = (pathName, relativeTo) => (
     new Promise((resolve, reject) => {
         sass.render(
-            { file },
+            { file: pathName },
             (err, result) => {
                 if (err && (relativeTo && relativeTo !== '/')) {
                     return resolve([]);
@@ -27,66 +27,75 @@ const readSass = (file, relativeTo) => (
     })
 );
 
-const createTypings = (f, creator, cache, handleError, handleWarning, verbose) => (
-    readSass(f)
-    .catch((reason) => {
-        handleError(`${chalk.red(f)}\n${reason}\n`);
-    })
-    .then(content => creator.create(f, content, cache))
-    .then(c => c.writeFile())
-    .then((c) => {
-        if (verbose) {
-            console.info(`Created ${chalk.green(c.outputFilePath)}`);
-        }
-        c.messageList.forEach((message) => {
-            handleWarning(`${chalk.yellow(f)}\nWarning: ${message}\n`);
-        });
-        return c;
-    })
-    .catch((reason) => {
-        handleError(`${chalk.red(f)}\nError: ${reason}\n`);
-    })
+const createTypings = (pathName, creator, cache, handleError, handleWarning, verbose) => (
+    readSass(pathName)
+        .then(content => creator.create(pathName, content, cache))
+        .then(c => c.writeFile())
+        .then((c) => {
+            if (verbose) {
+                console.info(`Created ${chalk.green(c.outputFilePath)}`);
+            }
+            c.messageList.forEach((message) => {
+                const warningTitle = chalk.yellow(`WARNING: ${pathName}`);
+                const warningInfo = message;
+                handleWarning(`${warningTitle}\n${warningInfo}`);
+            });
+            return c;
+        })
+        .catch((reason) => {
+            const errorTitle = chalk.red(`ERROR: ${pathName}`);
+            const errorInfo = reason;
+            handleError(`${errorTitle}\n${errorInfo}`);
+        })
 );
 
+const createTypingsForFileOnWatch = (creator, cache, verbose) => (pathName) => {
+    let warnings = 0;
+    let errors = 0;
 
-const createTypingsForFileOnWatch = (creator, cache, verbose) => (f) => {
-    let warnings = [];
-    let errors = [];
-
-    const cleanUp = () => {
-        warnings.forEach(m => console.warn(m));
-        errors.forEach(e => console.error(e));
-        errors = [];
-        warnings = [];
+    const handleError = (error) => {
+        console.error(error);
+        errors += 1;
+    };
+    const handleWarning = (warning) => {
+        console.warn(warning);
+        warnings += 1;
+    };
+    const onComplete = () => {
+        if (warnings + errors > 0) {
+            console.info(`${pathName}: ${warnings} warnings, ${errors} errors`);
+        }
+        warnings = 0;
+        errors = 0;
     };
 
-    const handleError = (e) => { errors.push(e); };
-    const handleWarning = (w) => { warnings.push(w); };
-    return createTypings(f, creator, cache, handleError, handleWarning, verbose)
-        .then(cleanUp);
+    return createTypings(pathName, creator, cache, handleError, handleWarning, verbose)
+        .then(onComplete);
 };
 
-const createTypingsForFiles = (creator, cache, verbose) => (files) => {
-    let errors = [];
-    let warnings = [];
+const createTypingsForFiles = (creator, cache, verbose) => (pathNames) => {
+    let warnings = 0;
+    let errors = 0;
 
-    const cleanUp = () => {
-        warnings.forEach(m => console.warn(m));
-        errors.forEach(e => console.error(e));
-        if (warnings.length + errors.length > 0) {
-            console.info(`Completed with ${warnings.length} warnings and ${errors.length} errors.`);
+    const handleError = (error) => {
+        console.error(error);
+        errors += 1;
+    };
+    const handleWarning = (warning) => {
+        console.warn(warning);
+        warnings += 1;
+    };
+    const onComplete = () => {
+        if (warnings + errors > 0) {
+            console.info(`Completed with ${warnings} warnings and ${errors} errors.`);
         }
-        errors = [];
-        warnings = [];
+        errors = 0;
+        warnings = 0;
     };
 
-    const handleError = (e) => { errors.push(e); };
-    const handleWarning = (w) => { warnings.push(w); };
-
-    const mapper = f => createTypings(f, creator, cache, handleError, handleWarning, verbose);
-
-    return Promise.all(files.map(mapper))
-        .then(cleanUp);
+    return Promise.all(pathNames.map(
+        pathName => createTypings(pathName, creator, cache, handleError, handleWarning, verbose),
+    )).then(onComplete);
 };
 
 
@@ -173,16 +182,16 @@ const main = () => {
     const cache = !!argv.w;
 
     if (!argv.w) {
-        glob(filesPattern, null, (err, files) => {
+        glob(filesPattern, null, (err, pathNames) => {
             if (err) {
                 console.error(err);
                 return;
-            } else if (!files || !files.length) {
+            } else if (!pathNames || !pathNames.length) {
                 console.info('Creating typings for 0 files');
                 return;
             }
-            console.info(`Creating typings for ${files.length} files\n`);
-            createTypingsForFiles(creator, cache, argv.v)(files);
+            console.info(`Creating typings for ${pathNames.length} files\n`);
+            createTypingsForFiles(creator, cache, argv.v)(pathNames);
         });
     } else {
         console.info(`Watching ${filesPattern} ...\n`);
