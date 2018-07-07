@@ -100,15 +100,22 @@ const createTypingsForFiles = (creator, cache, verbose) => (pathNames) => {
 
 
 const main = () => {
-    const yarg = yargs.usage('Create .scss.d.ts from CSS modules *.scss files.\nUsage: $0 [options] <input directory>')
-        .example('$0 src/styles')
-        .example('$0 src -o dist')
-        .example('$0 -p styles/**/*.scss -w')
+    const yarg = yargs
+        .usage('$0 [inputDir] [options]', 'Create .scss.d.ts from CSS modules *.scss files.', (commandYargs) => {
+            commandYargs
+                .positional('inputDir', {
+                    describe: 'Directory to search for scss files.',
+                    type: 'string',
+                    default: '.',
+                })
+                .example('$0 src/styles')
+                .example('$0 src -o dist')
+                .example('$0 -p styles/**/*.scss -w');
+        })
 
         .detectLocale(false)
         .version(pkg.version)
 
-        .demandCommand(1, 1, 'Input directory must be specified', 'Only one input directory must be specified')
         .option('c', {
             alias: 'camelCase',
             default: false,
@@ -154,7 +161,7 @@ const main = () => {
         return;
     }
 
-    const searchDir = String(argv._[0]) || './';
+    const searchDir = argv.inputDir;
     // Show help if no search diretory present
     if (searchDir === undefined) {
         yarg.showHelp();
