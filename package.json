@@ -18,14 +18,16 @@
   "author": "Feiyang Chen",
   "license": "ISC",
   "dependencies": {
-    "node-sass": "4.5.3",
-    "typed-css-modules": "0.3.0"
+    "node-sass": "4.9.0",
+    "typed-css-modules": "0.3.3",
+    "yargs": "11.1.0"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",
     "babel-preset-es2015": "^6.24.1",
     "gulp": "^3.9.1",
     "gulp-babel": "^7.0.0",
+    "gulp-cli": "^2.0.1",
     "gulp-plumber": "^1.1.0"
   }
 }

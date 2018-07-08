@@ -1,102 +1,211 @@
 #!/usr/bin/env node
 
-'use strict';
-
-import path from 'path';
-import chokidar from 'chokidar';
-import glob from 'glob';
-import yargs from 'yargs';
-import chalk from 'chalk';
 import DtsCreator from 'typed-css-modules';
+import chalk from 'chalk';
+import chokidar from 'chokidar';
+import fs from 'fs';
+import glob from 'glob';
+import path from 'path';
 import sass from 'node-sass';
+import yargs from 'yargs';
 
+const pkg = require('../package.json');
 
-let yarg = yargs.usage('Create .css.d.ts from CSS modules *.css files.\nUsage: $0 [options] <input directory>')
-    .example('$0 src/styles')
-    .example('$0 src -o dist')
-    .example('$0 -p styles/**/*.icss -w')
-    .detectLocale(false)
-    .demand(['_'])
-    .alias('c', 'camelCase').describe('c', 'Convert CSS class tokens to camelcase')
-    .alias('o', 'outDir').describe('o', 'Output directory')
-    .alias('p', 'pattern').describe('p', 'Glob pattern with css files')
-    .alias('w', 'watch').describe('w', 'Watch input directory\'s css files or pattern').boolean('w')
-    .alias('d', 'dropExtension').describe('d', 'Drop the input files extension').boolean('d')
-    .alias('h', 'help').help('h')
-    .version(() => require('../package.json').version)
-let argv = yarg.argv;
-let creator;
+const readSass = (pathName, relativeTo) => (
+    new Promise((resolve, reject) => {
+        sass.render(
+            { file: pathName },
+            (err, result) => {
+                if (err && (relativeTo && relativeTo !== '/')) {
+                    return resolve([]);
+                } else if (err && (!relativeTo || relativeTo === '/')) {
+                    return reject(err);
+                }
+                return resolve(result.css.toString());
+            },
+        );
+    })
+);
 
-function writeFile(f) {
-    getSource(f).then((content) => {
-        creator.create(f, content, !!argv.w)
-        .then(content => content.writeFile())
-        .then(content => {
-            console.log('Wrote ' + chalk.green(content.outputFilePath));
-            content.messageList.forEach(message => {
-                console.warn(chalk.yellow('[Warn] ' + message));
+const createTypings = (pathName, creator, cache, handleError, handleWarning, verbose) => (
+    readSass(pathName)
+        .then(content => creator.create(pathName, content, cache))
+        .then(c => c.writeFile())
+        .then((c) => {
+            if (verbose) {
+                console.info(`Created ${chalk.green(c.outputFilePath)}`);
+            }
+            c.messageList.forEach((message) => {
+                const warningTitle = chalk.yellow(`WARNING: ${pathName}`);
+                const warningInfo = message;
+                handleWarning(`${warningTitle}\n${warningInfo}`);
             });
+            return c;
         })
-        .catch(reason => console.error(chalk.red('[Error] ' + reason)));
-    });
+        .catch((reason) => {
+            const errorTitle = chalk.red(`ERROR: ${pathName}`);
+            const errorInfo = reason;
+            handleError(`${errorTitle}\n${errorInfo}`);
+        })
+);
+
+const createTypingsForFileOnWatch = (creator, cache, verbose) => (pathName) => {
+    let warnings = 0;
+    let errors = 0;
+
+    const handleError = (error) => {
+        console.error(error);
+        errors += 1;
+    };
+    const handleWarning = (warning) => {
+        console.warn(warning);
+        warnings += 1;
+    };
+    const onComplete = () => {
+        if (warnings + errors > 0) {
+            console.info(`${pathName}: ${warnings} warnings, ${errors} errors`);
+        }
+        warnings = 0;
+        errors = 0;
+    };
+
+    return createTypings(pathName, creator, cache, handleError, handleWarning, verbose)
+        .then(onComplete);
 };
 
-function getSource(file, relativeTo) {
-    return new Promise((resolve, reject) => {
-      sass.render({file}, (err, result) => {
-        if (err && relativeTo && relativeTo !== '/') {
-          return resolve([]);
-        }
-  
-        if (err && (!relativeTo || relativeTo === '/')) {
-          return reject(err);
-        }
-  
-        resolve(result.css.toString());
-      });
-    });
-  }
+const createTypingsForFiles = (creator, cache, verbose) => (pathNames) => {
+    let warnings = 0;
+    let errors = 0;
 
-let main = () => {
-    let rootDir, searchDir;
+    const handleError = (error) => {
+        console.error(error);
+        errors += 1;
+    };
+    const handleWarning = (warning) => {
+        console.warn(warning);
+        warnings += 1;
+    };
+    const onComplete = () => {
+        if (warnings + errors > 0) {
+            console.info(`Completed with ${warnings} warnings and ${errors} errors.`);
+        }
+        errors = 0;
+        warnings = 0;
+    };
+
+    return Promise.all(pathNames.map(
+        pathName => createTypings(pathName, creator, cache, handleError, handleWarning, verbose),
+    )).then(onComplete);
+};
+
+
+const main = () => {
+    const yarg = yargs
+        .usage('$0 [inputDir] [options]', 'Create .scss.d.ts from CSS modules *.scss files.', (commandYargs) => {
+            commandYargs
+                .positional('inputDir', {
+                    describe: 'Directory to search for scss files.',
+                    type: 'string',
+                    default: '.',
+                })
+                .example('$0 src/styles')
+                .example('$0 src -o dist')
+                .example('$0 -p styles/**/*.scss -w');
+        })
+
+        .detectLocale(false)
+        .version(pkg.version)
+
+        .option('c', {
+            alias: 'camelCase',
+            default: false,
+            type: 'boolean',
+            describe: 'Convert CSS class tokens to camelCase',
+        })
+        .option('o', {
+            alias: 'outDir',
+            describe: 'Output directory',
+        })
+        .option('p', {
+            alias: 'pattern',
+            default: '**/[^_]*.scss',
+            describe: 'Glob pattern with scss files',
+        })
+        .option('w', {
+            alias: 'watch',
+            default: false,
+            type: 'boolean',
+            describe: 'Watch input directory\'s scss files or pattern',
+        })
+        .option('d', {
+            alias: 'dropExtension',
+            default: false,
+            type: 'boolean',
+            describe: 'Drop the input files extension',
+        })
+        .option('v', {
+            alias: 'verbose',
+            default: false,
+            type: 'boolean',
+            describe: 'Show verbose message',
+        })
+
+        .alias('h', 'help')
+        .help('h');
+
+    const { argv } = yarg;
+
+    // Show help
     if (argv.h) {
         yarg.showHelp();
         return;
     }
 
-    if (argv._ && argv._[0]) {
-        searchDir = argv._[0];
-    } else if (argv.p) {
-        searchDir = './';
-    } else {
+    const searchDir = argv.inputDir;
+    // Show help if no search diretory present
+    if (searchDir === undefined) {
         yarg.showHelp();
         return;
     }
-    let filesPattern = path.join(searchDir, argv.p || '**/*.css');
-    rootDir = process.cwd();
-    creator = new DtsCreator({
+
+    // If search directory doesn't exits, exit
+    if (!fs.existsSync(searchDir)) {
+        console.error(chalk.red(`Error: Input directory ${searchDir} doesn't exist.`));
+        return;
+    }
+
+    const filesPattern = path.join(searchDir, argv.p);
+
+    const rootDir = process.cwd();
+
+    const creator = new DtsCreator({
         rootDir,
         searchDir,
         outDir: argv.o,
         camelCase: argv.c,
-        dropExtension: argv.d
+        dropExtension: argv.d,
     });
 
+    const cache = !!argv.w;
+
     if (!argv.w) {
-        glob(filesPattern, null, (err, files) => {
+        glob(filesPattern, null, (err, pathNames) => {
             if (err) {
                 console.error(err);
                 return;
+            } else if (!pathNames || !pathNames.length) {
+                console.info('Creating typings for 0 files');
+                return;
             }
-            if (!files || !files.length) return;
-            files.forEach(writeFile);
+            console.info(`Creating typings for ${pathNames.length} files\n`);
+            createTypingsForFiles(creator, cache, argv.v)(pathNames);
         });
     } else {
-        console.log('Watch ' + filesPattern + '...');
+        console.info(`Watching ${filesPattern} ...\n`);
 
-        var watcher = chokidar.watch(filesPattern);
-        watcher.on('add', writeFile);
-        watcher.on('change', writeFile);
+        const watcher = chokidar.watch(filesPattern);
+        watcher.on('add', createTypingsForFileOnWatch(creator, cache, argv.v));
+        watcher.on('change', createTypingsForFileOnWatch(creator, cache, argv.v));
     }
 };
 
