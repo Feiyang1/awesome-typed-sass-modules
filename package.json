@@ -18,6 +18,7 @@
   "author": "Feiyang Chen",
   "license": "ISC",
   "dependencies": {
+    "cosmiconfig": "5.0.6",
     "node-sass": "4.9.0",
     "typed-css-modules": "0.3.3",
     "yargs": "11.1.0"

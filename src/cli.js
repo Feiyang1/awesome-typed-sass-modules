@@ -3,6 +3,7 @@
 import DtsCreator from 'typed-css-modules';
 import chalk from 'chalk';
 import chokidar from 'chokidar';
+import cosmiconfig from 'cosmiconfig';
 import fs from 'fs';
 import glob from 'glob';
 import path from 'path';
@@ -11,10 +12,15 @@ import yargs from 'yargs';
 
 const pkg = require('../package.json');
 
+const sassConfig = (() => {
+    const rc = cosmiconfig('sass').searchSync();
+    return rc === null ? {} : rc.config;
+  })();
+
 const readSass = (pathName, relativeTo) => (
     new Promise((resolve, reject) => {
         sass.render(
-            { file: pathName },
+            Object.assign({}, sassConfig, { file: pathName }),
             (err, result) => {
                 if (err && (relativeTo && relativeTo !== '/')) {
                     return resolve([]);
