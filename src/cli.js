@@ -215,7 +215,7 @@ const main = () => {
         console.info(`Watching ${filesPattern} ...\n`);
         
         const chokidarOptions = argv.i ? {ignored: argv.i} : null;
-        const watcher = chokidar.watch(filesPattern, chokidar);
+        const watcher = chokidar.watch(filesPattern, chokidarOptions);
         watcher.on('add', createTypingsForFileOnWatch(creator, cache, argv.v));
         watcher.on('change', createTypingsForFileOnWatch(creator, cache, argv.v));
     }
