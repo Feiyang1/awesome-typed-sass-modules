@@ -20,6 +20,12 @@ Please refer to [typed-css-modules](https://github.com/Quramy/typed-css-modules)
 ```sh
 npm install -g awesome-typed-sass-modules
 ```
+
+see all options
+```sh
+atsm -h
+```
+
 ```
 atsm -p example/**/*.scss
 ```
