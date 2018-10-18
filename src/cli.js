@@ -155,6 +155,10 @@ const main = () => {
             type: 'boolean',
             describe: 'Show verbose message',
         })
+        .option('i', {
+            alias: 'ignore',
+            describe: 'Glob pattern for files that should be ignored',
+        })
 
         .alias('h', 'help')
         .help('h');
@@ -195,7 +199,8 @@ const main = () => {
     const cache = !!argv.w;
 
     if (!argv.w) {
-        glob(filesPattern, null, (err, pathNames) => {
+        const globOptions = argv.i ? {ignore: argv.i} : null;
+        glob(filesPattern, globOptions, (err, pathNames) => {
             if (err) {
                 console.error(err);
                 return;
@@ -208,8 +213,9 @@ const main = () => {
         });
     } else {
         console.info(`Watching ${filesPattern} ...\n`);
-
-        const watcher = chokidar.watch(filesPattern);
+        
+        const chokidarOptions = argv.i ? {ignored: argv.i} : null;
+        const watcher = chokidar.watch(filesPattern, chokidarOptions);
         watcher.on('add', createTypingsForFileOnWatch(creator, cache, argv.v));
         watcher.on('change', createTypingsForFileOnWatch(creator, cache, argv.v));
     }
