@@ -21,7 +21,7 @@
     "cosmiconfig": "^5.0.6",
     "node-sass": "^4.9.4",
     "typed-css-modules": "^0.4.0",
-    "yargs": "^11.1.0"
+    "yargs": "^13.0.0"
   },
   "devDependencies": {
     "babel-core": "6.26.3",
