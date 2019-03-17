@@ -7,7 +7,7 @@ var plumber = require('gulp-plumber');
 gulp.task('compile', () => {
   return gulp.src('src/**/*.js')
     .pipe(plumber())
-    .pipe(babel({presets: ['es2015']}))
+    .pipe(babel({presets: ['@babel/preset-env']}))
     .pipe(gulp.dest('lib'))
     ;
 });
