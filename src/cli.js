@@ -15,7 +15,7 @@ const pkg = require('../package.json');
 const sassConfig = (() => {
     const rc = cosmiconfig('sass').searchSync();
     return rc === null ? {} : rc.config;
-  })();
+})();
 
 const readSass = (pathName, relativeTo) => (
     new Promise((resolve, reject) => {
@@ -41,11 +41,15 @@ const createTypings = (pathName, creator, cache, handleError, handleWarning, ver
             if (verbose) {
                 console.info(`Created ${chalk.green(c.outputFilePath)}`);
             }
-            c.messageList.forEach((message) => {
-                const warningTitle = chalk.yellow(`WARNING: ${pathName}`);
-                const warningInfo = message;
-                handleWarning(`${warningTitle}\n${warningInfo}`);
-            });
+
+            if (c.messageList) {
+                c.messageList.forEach((message) => {
+                    const warningTitle = chalk.yellow(`WARNING: ${pathName}`);
+                    const warningInfo = message;
+                    handleWarning(`${warningTitle}\n${warningInfo}`);
+                });
+            }
+
             return c;
         })
         .catch((reason) => {
@@ -184,7 +188,8 @@ const main = () => {
         return;
     }
 
-    const filesPattern = path.join(searchDir, argv.p);
+    // use foward slash. e.g. chokidar only supports glob with forward slashes
+    const filesPattern = path.join(searchDir, argv.p).trim().replace(/\\/g, '/');
 
     const rootDir = process.cwd();
 
@@ -199,7 +204,7 @@ const main = () => {
     const cache = !!argv.w;
 
     if (!argv.w) {
-        const globOptions = argv.i ? {ignore: argv.i} : null;
+        const globOptions = argv.i ? { ignore: argv.i } : null;
         glob(filesPattern, globOptions, (err, pathNames) => {
             if (err) {
                 console.error(err);
@@ -213,8 +218,8 @@ const main = () => {
         });
     } else {
         console.info(`Watching ${filesPattern} ...\n`);
-        
-        const chokidarOptions = argv.i ? {ignored: argv.i} : null;
+
+        const chokidarOptions = argv.i ? { ignored: argv.i } : null;
         const watcher = chokidar.watch(filesPattern, chokidarOptions);
         watcher.on('add', createTypingsForFileOnWatch(creator, cache, argv.v));
         watcher.on('change', createTypingsForFileOnWatch(creator, cache, argv.v));
