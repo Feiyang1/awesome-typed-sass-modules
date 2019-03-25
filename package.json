@@ -24,10 +24,10 @@
     "yargs": "^13.0.0"
   },
   "devDependencies": {
-    "@babel/preset-env": "7.3.4",
+    "@babel/preset-env": "7.4.2",
     "gulp": "4.0.0",
     "gulp-babel": "8.0.0",
-    "@babel/core": "7.0.0",
+    "@babel/core": "7.4.0",
     "gulp-cli": "2.0.1",
     "gulp-plumber": "1.2.1"
   }
