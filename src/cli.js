@@ -8,6 +8,7 @@ import fs from 'fs';
 import glob from 'glob';
 import path from 'path';
 import sass from 'node-sass';
+import tildeImporter from 'node-sass-tilde-importer';
 import yargs from 'yargs';
 
 const pkg = require('../package.json');
@@ -20,7 +21,7 @@ const sassConfig = (() => {
 const readSass = (pathName, relativeTo) => (
     new Promise((resolve, reject) => {
         sass.render(
-            Object.assign({}, sassConfig, { file: pathName }),
+            Object.assign({}, sassConfig, { file: pathName, importer: tildeImporter }),
             (err, result) => {
                 if (err && (relativeTo && relativeTo !== '/')) {
                     return resolve([]);
