@@ -16,6 +16,9 @@ The goal of this package is to
 ## Options
 Please refer to [typed-css-modules](https://github.com/Quramy/typed-css-modules).
 
+## ~ Imports
+The tool supports ~ import syntax for importing scss files from node_modules. More information can be found [here](https://github.com/webpack-contrib/sass-loader#imports).
+
 ## CLI
 ```sh
 npm install -g awesome-typed-sass-modules
