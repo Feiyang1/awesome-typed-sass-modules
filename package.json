@@ -21,8 +21,8 @@
     "cosmiconfig": "^5.0.6",
     "node-sass": "^4.9.4",
     "node-sass-tilde-importer": "^1.0.2",
-    "typed-css-modules": "^0.4.0",
-    "yargs": "^13.0.0"
+    "typed-css-modules": "^0.6.0",
+    "yargs": "^11.0.0"
   },
   "devDependencies": {
     "@babel/preset-env": "7.4.3",
