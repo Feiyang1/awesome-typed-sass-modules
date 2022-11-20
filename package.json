@@ -18,7 +18,7 @@
   "author": "Feiyang Chen",
   "license": "ISC",
   "dependencies": {
-    "cosmiconfig": "^5.0.6",
+    "cosmiconfig": "^7.0.0",
     "node-sass": "^4.9.4",
     "node-sass-tilde-importer": "^1.0.2",
     "typed-css-modules": "^0.4.0",
