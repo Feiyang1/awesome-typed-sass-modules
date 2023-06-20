@@ -22,7 +22,7 @@
     "node-sass": "^4.9.4",
     "node-sass-tilde-importer": "^1.0.2",
     "typed-css-modules": "^0.4.0",
-    "yargs": "^13.0.0"
+    "yargs": "^17.0.0"
   },
   "devDependencies": {
     "@babel/preset-env": "7.4.3",
