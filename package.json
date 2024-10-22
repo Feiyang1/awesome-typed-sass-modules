@@ -21,15 +21,15 @@
     "cosmiconfig": "^5.0.6",
     "node-sass": "^4.9.4",
     "node-sass-tilde-importer": "^1.0.2",
-    "typed-css-modules": "^0.4.0",
+    "typed-css-modules": "^0.9.0",
     "yargs": "^13.0.0"
   },
   "devDependencies": {
-    "@babel/preset-env": "7.4.3",
-    "gulp": "4.0.0",
+    "@babel/preset-env": "7.25.9",
+    "gulp": "4.0.2",
     "gulp-babel": "8.0.0",
-    "@babel/core": "7.4.3",
-    "gulp-cli": "2.1.0",
+    "@babel/core": "7.25.9",
+    "gulp-cli": "2.3.0",
     "gulp-plumber": "1.2.1"
   }
 }
